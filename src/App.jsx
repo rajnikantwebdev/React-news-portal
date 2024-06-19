@@ -2,35 +2,73 @@ import { useEffect, useState, useMemo } from "react";
 import NewsCard from "./components/NewsCard";
 import Navbar from "./components/Navbar";
 import { useFetchNews } from "./utils/useFetchNews";
+import PaginationComponent from "./components/Pagination";
+import PopularCategories from "./components/PopularCategories";
+import { popularCategoriesArray } from "./utils/popularCategories";
+import CardShimmer from "./components/CardShimmer";
 
 function App() {
   const [newsPost, setNewsPost] = useState(null);
-  const [dependency, setDependency] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [currentQuery, setCurrentQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const memoizedFetchNews = useMemo(async () => {
-    const news = await useFetchNews();
+    const news = await useFetchNews(currentPage, currentQuery);
     setNewsPost(news);
-  }, [dependency]); // Add dependencies here
+  }, [currentPage, currentQuery]); // Add dependencies here
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleCategoryClick = (category) => {
+    setCurrentQuery(category);
+    setSelectedCategory(category);
+    setCurrentPage(0); // Reset to the first page when changing the query
+  };
 
   useEffect(() => {
     memoizedFetchNews;
   }, [memoizedFetchNews]);
 
-  console.log("news-post: ", newsPost);
+  console.log("current-page: ", currentPage);
+
   return (
-    <main className="w-full min-h-screen">
+    <main className="w-full min-h-screen flex flex-col">
       <Navbar />
-      <section className="w-full h-full px-12 py-12">
-        {newsPost === null ? (
-          <div>Loading...</div>
+      <section className="w-full h-full px-12 py-12 flex-1">
+        {!newsPost ? (
+          "Loading..."
         ) : (
-          <div className="flex w-full h-full flex-wrap">
+          <div className="flex gap-2 items-center my-6">
+            {popularCategoriesArray.map((p) => (
+              <PopularCategories
+                categoryName={p}
+                key={p}
+                onClick={handleCategoryClick}
+                isSelected={selectedCategory === p}
+              />
+            ))}
+          </div>
+        )}
+
+        {newsPost === null ? (
+          <CardShimmer />
+        ) : (
+          <div className="flex w-full h-full flex-wrap gap-8">
             {newsPost.map((n) => {
               return <NewsCard news={n} key={n._id} />;
             })}
           </div>
         )}
       </section>
+      <div className="w-full bg-gray-200 flex justify-center py-6">
+        <PaginationComponent
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </main>
   );
 }
