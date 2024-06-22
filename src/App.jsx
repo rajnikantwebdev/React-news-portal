@@ -5,7 +5,26 @@ import { useFetchNews } from "./utils/useFetchNews";
 import PaginationComponent from "./components/Pagination";
 import PopularCategories from "./components/PopularCategories";
 import { popularCategoriesArray } from "./utils/popularCategories";
-import CardShimmer from "./components/CardShimmer";
+import CardShimmer from "./components/ShimmerEffect";
+import { CategoriesShimmer } from "./components/ShimmerEffect";
+import { createBrowserRouter } from "react-router-dom";
+import NewsPage from "./components/NewsPage";
+import Layout from "./components/Layout";
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+  },
+  {
+    path: "/news/:id",
+    element: (
+      <Layout>
+        <NewsPage />
+      </Layout>
+    ),
+  },
+]);
 
 function App() {
   const [newsPost, setNewsPost] = useState(null);
@@ -39,9 +58,9 @@ function App() {
       <Navbar />
       <section className="w-full h-full px-12 py-12 flex-1">
         {!newsPost ? (
-          "Loading..."
+          <CategoriesShimmer />
         ) : (
-          <div className="flex gap-2 items-center my-6">
+          <div className="flex gap-2 items-center my-6 flex-wrap">
             {popularCategoriesArray.map((p) => (
               <PopularCategories
                 categoryName={p}

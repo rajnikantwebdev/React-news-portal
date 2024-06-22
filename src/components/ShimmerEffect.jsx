@@ -21,3 +21,20 @@ const CardShimmer = () => {
 };
 
 export default CardShimmer;
+
+export const CategoriesShimmer = () => {
+  return (
+    <div className="flex gap-2 flex-wrap my-8">
+      {Array(7)
+        .fill(null)
+        .map((_, index) => {
+          return (
+            <div
+              key={index}
+              className="min-w-24 bg-gray-300 min-h-8 shadow-md animate-pulse rounded-full"
+            />
+          );
+        })}
+    </div>
+  );
+};

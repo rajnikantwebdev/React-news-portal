@@ -9,104 +9,77 @@ import Collapse from "@mui/material/Collapse";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import ReadMoreIcon from "@mui/icons-material/ReadMore";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import notFoundImage from "../assets/not-found.jpg";
 import rocketIcon from "../assets/rocket.png";
 import BookmarkAddOutlinedIcon from "@mui/icons-material/BookmarkAddOutlined";
 import BookmarkAddIcon from "@mui/icons-material/BookmarkAdd";
-import { addToLocalStorage } from "../utils/localstorage";
-
-const ExpandMore = styled((props) => {
-  const { expand, ...other } = props;
-  return <IconButton {...other} />;
-})(({ theme, expand }) => ({
-  transform: !expand ? "rotate(0deg)" : "rotate(180deg)",
-  marginLeft: "auto",
-  transition: theme.transitions.create("transform", {
-    duration: theme.transitions.duration.shortest,
-  }),
-}));
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { addArticleId, removeArticleId } from "../store/articleSlice";
 
 export default function NewsCard({ news }) {
-  const [expanded, setExpanded] = React.useState(false);
-  const [savedNewsId, setSavedNewsId] = React.useState([]);
+  const dispatch = useDispatch();
+  const savedArticleIds = useSelector(
+    (state) => state.articles.savedArticleIds
+  );
 
-  const handleExpandClick = () => {
-    setExpanded(!expanded);
+  const handleSave = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (savedArticleIds.includes(news._id)) {
+      dispatch(removeArticleId(news._id));
+    } else {
+      dispatch(addArticleId(news._id));
+    }
   };
 
-  const handleSavedNews = (newsId) => {
-    console.log("saved!");
-    setSavedNewsId((prev) => [...prev, newsId]);
-  };
-
-  // Use effect to update local storage whenever savedNewsId changes
-  React.useEffect(() => {
-    addToLocalStorage(savedNewsId);
-  }, [savedNewsId]);
+  const isSaved = savedArticleIds.includes(news._id);
 
   return (
-    <Card sx={{ maxWidth: 345 }}>
-      <CardHeader
-        avatar={<Avatar src={rocketIcon} aria-label="author" />}
-        action={
-          <IconButton aria-label="settings">
-            <MoreVertIcon />
-          </IconButton>
-        }
-        title={
-          !news?.byline?.original
-            ? "Unknown"
-            : news?.byline?.original.slice(0, 20) + "..."
-        }
-        subheader={new Date(news?.pub_date).toDateString()}
-      />
-      <CardMedia
-        component="img"
-        height="194"
-        image={
-          !news?.multimedia[0]?.url
-            ? notFoundImage
-            : `https://www.nytimes.com/${news?.multimedia[0]?.url}`
-        }
-        alt={news.headline.main}
-        sx={{ objectFit: "cover", width: "100%", height: "194px" }} // Ensure all images have the same size
-      />
-      <CardContent>
-        <Typography variant="body2" color="text.secondary">
-          {news?.snippet?.length >= 70
-            ? news?.snippet?.slice(0, 70) + "..."
-            : news?.snippet}
-        </Typography>
-      </CardContent>
-      <CardActions disableSpacing>
-        <IconButton
-          onClick={() => handleSavedNews(news?._id)}
-          aria-label="add to favorites"
-        >
-          <BookmarkAddOutlinedIcon />
-        </IconButton>
-        <IconButton aria-label="share">
-          <ReadMoreIcon />
-        </IconButton>
-        <ExpandMore
-          expand={expanded}
-          onClick={handleExpandClick}
-          aria-expanded={expanded}
-          aria-label="show more"
-        >
-          <ExpandMoreIcon />
-        </ExpandMore>
-      </CardActions>
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
+    <Link
+      to={`/news/${news?._id?.slice(14)}`}
+      style={{ textDecoration: "none" }}
+    >
+      <Card sx={{ maxWidth: 345, minWidth: 300, minHeight: 460 }}>
+        <CardHeader
+          avatar={<Avatar src={rocketIcon} aria-label="author" />}
+          title={
+            !news?.byline?.original
+              ? "Unknown"
+              : news?.byline?.original.slice(0, 20) + "..."
+          }
+          subheader={new Date(news?.pub_date).toDateString()}
+        />
+        <CardMedia
+          component="img"
+          height="194"
+          image={
+            !news?.multimedia[0]?.url
+              ? notFoundImage
+              : `https://www.nytimes.com/${news?.multimedia[0]?.url}`
+          }
+          alt={news.headline.main}
+          sx={{ objectFit: "cover", width: "100%", height: "194px" }} // Ensure all images have the same size
+        />
         <CardContent>
-          <Typography paragraph className="bg-red-400">
-            {news?.lead_paragraph}
+          <Typography style={{ marginBottom: "12px" }}>
+            {news?.headline?.main?.length > 40
+              ? news?.headline?.main?.slice(0, 40) + "..."
+              : news?.headline?.main}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {news?.snippet?.length >= 70
+              ? news?.snippet?.slice(0, 70) + "..."
+              : news?.snippet}
           </Typography>
         </CardContent>
-      </Collapse>
-    </Card>
+        <CardActions disableSpacing>
+          <IconButton onClick={handleSave} aria-label="add to favorites">
+            {isSaved ? <BookmarkAddIcon /> : <BookmarkAddOutlinedIcon />}
+          </IconButton>
+        </CardActions>
+      </Card>
+    </Link>
   );
 }
